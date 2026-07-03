@@ -16,16 +16,16 @@ export default async function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white border-b px-6 py-4 flex justify-between items-center">
+      <nav className="bg-white border-b px-4 sm:px-6 py-4 flex flex-col sm:flex-row justify-between sm:items-center gap-2">
         <Link href="/dashboard" className="font-bold text-lg">
           TaskBoard
         </Link>
         <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-600">{user.email}</span>
+          <span className="text-sm text-gray-600 truncate max-w-[200px]">{user.email}</span>
           <form action="/auth/signout" method="post">
             <button
               type="submit"
-              className="text-sm text-red-600 hover:underline"
+              className="text-sm text-red-600 hover:underline whitespace-nowrap"
             >
               Log out
             </button>
