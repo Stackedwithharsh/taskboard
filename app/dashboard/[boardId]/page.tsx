@@ -2,6 +2,7 @@ import { createClient } from '@/utils/supabase/server'
 import { revalidatePath } from 'next/cache'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import BoardClient from './BoardClient'
 
 async function createTask(formData: FormData) {
   'use server'
@@ -22,35 +23,6 @@ async function createTask(formData: FormData) {
   })
   revalidatePath(`/dashboard/${boardId}`)
 }
-
-async function updateTaskStatus(formData: FormData) {
-  'use server'
-
-  const taskId = formData.get('taskId') as string
-  const boardId = formData.get('boardId') as string
-  const newStatus = formData.get('newStatus') as string
-
-  const supabase = await createClient()
-  await supabase.from('tasks').update({ status: newStatus }).eq('id', taskId)
-  revalidatePath(`/dashboard/${boardId}`)
-}
-
-async function deleteTask(formData: FormData) {
-  'use server'
-
-  const taskId = formData.get('taskId') as string
-  const boardId = formData.get('boardId') as string
-
-  const supabase = await createClient()
-  await supabase.from('tasks').delete().eq('id', taskId)
-  revalidatePath(`/dashboard/${boardId}`)
-}
-
-const columns = [
-  { key: 'todo', label: 'To Do' },
-  { key: 'in_progress', label: 'In Progress' },
-  { key: 'done', label: 'Done' },
-]
 
 export default async function BoardPage({
   params,
@@ -98,67 +70,7 @@ export default async function BoardPage({
         </button>
       </form>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {columns.map((col) => {
-          const columnTasks = tasks?.filter((t) => t.status === col.key) || []
-
-          return (
-            <div key={col.key} className="bg-gray-100 rounded-lg p-4">
-              <h2 className="font-semibold mb-3">
-                {col.label} ({columnTasks.length})
-              </h2>
-
-              <div className="space-y-2">
-                {columnTasks.map((task) => (
-                  <div
-                    key={task.id}
-                    className="bg-white p-3 rounded-md shadow-sm"
-                  >
-                    <p className="text-sm mb-2">{task.title}</p>
-
-                    <div className="flex justify-between items-center text-xs">
-                      <div className="flex gap-2">
-                        {columns
-                          .filter((c) => c.key !== col.key)
-                          .map((c) => (
-                            <form key={c.key} action={updateTaskStatus}>
-                              <input type="hidden" name="taskId" value={task.id} />
-                              <input type="hidden" name="boardId" value={boardId} />
-                              <input type="hidden" name="newStatus" value={c.key} />
-                              <button
-                                type="submit"
-                                className="text-blue-600 hover:underline"
-                              >
-                                → {c.label}
-                              </button>
-                            </form>
-                          ))}
-                      </div>
-
-                      <form action={deleteTask}>
-                        <input type="hidden" name="taskId" value={task.id} />
-                        <input type="hidden" name="boardId" value={boardId} />
-                        <button
-                          type="submit"
-                          className="text-red-600 hover:underline"
-                        >
-                          Delete
-                        </button>
-                      </form>
-                    </div>
-                  </div>
-                ))}
-
-                {columnTasks.length === 0 && (
-                  <p className="text-xs text-gray-400 text-center py-4">
-                    No tasks
-                  </p>
-                )}
-              </div>
-            </div>
-          )
-        })}
-      </div>
+      <BoardClient initialTasks={tasks || []} />
     </div>
   )
 }
